@@ -42,7 +42,8 @@ objFile.Write "     pushd "&chr(34)&"%CD%"&chr(34) & vbCrLf
 objFile.Write "     CD /D "&chr(34)&"%~dp0"&chr(34) & vbCrLf
 objFile.Write " :--------------------------------------" & vbCrLf
 
-objFile.Write "dsadd user " & chr(34) & "CN=" & var(0) & " " & var(1) & ",ou=Cirtix,DC=ft52,DC=lokal" & chr(34) & " -samid " & var(3) & " -pwd COMOS$2015 -mustchpwd yes -memberOf " & chr(34) & "cn=PCS7ESUSER,ou=Cirtix,DC=ft52,DC=lokal" & chr(34) & " " & chr(34) & "cn=ComosCirtixUser,ou=Cirtix,DC=ft52,DC=lokal" & chr(34) & " -fn " & chr(34) & var(0) & chr(34) & " -ln " & chr(34) & var(1) & chr(34) & " -display " & chr(34) & var(0) & " " & var(1) & chr(34) & " -email " & var(2) & "@siemens.com -upn " & var(3) & "@ft52.lokal" & vbCrLf
+Include("config.cfg")
+objFile.Write "dsadd user " & strDomain & strOptions & vbCrLf
 
 objFile.Write "pause" & vbCrLf
 objFile.Write "del "&chr(34)& tmpFile &chr(34) & vbCrLf
@@ -54,3 +55,38 @@ objFile.Close
 else
 	msgbox "Illegeal number of arguments." & vbnewline & "Enter 4 comma seperated arguments." & vbnewline & "Creation of user was aborted!"
 end if
+
+Sub Include(Byval filename)
+  Dim codeToInclude
+  Dim FileToInclude
+
+  Const OpenAsDefault = -2
+  Const FailIfNotExist = 0
+  Const ForReading = 1
+  Const OpenFileForReading = 1
+  Dim FSO: Set FSO = CreateObject("Scripting.FileSystemObject")
+
+  'Check for existance of include
+ If Not FSO.FileExists(filename) Then
+    wscript.Echo "Include file not found."
+    Set FSO = Nothing
+    Exit Sub
+  End If
+
+  'open file to include
+ Set FileToInclude = FSO.OpenTextFile(filename, ForReading, _
+  FailIfNotExist, OpenAsDefault)
+
+  'read all contet of the file
+ codeToInclude = FileToInclude.ReadAll
+  
+  'close file after reading
+ FileToInclude.Close
+ 
+  'now cleanup the unused objects
+ Set FSO = Nothing
+  Set FileToInclude = Nothing
+
+  'now execute code from include file
+ ExecuteGlobal codeToInclude
+End Sub
